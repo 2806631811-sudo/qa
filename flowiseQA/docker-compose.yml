@@ -1,0 +1,45 @@
+
+services:
+  flowiseqa:
+
+    image: flowiseqa:latest
+    # 端口映射：宿主机8088端口 -> 容器8088端口（与原配置一致）
+    ports:
+      - "8088:8088"
+    # 环境变量配置（已修正为与mysqlpx匹配的参数）
+    environment:
+      # Flowise相关配置（保留原逻辑，支持环境变量替换）  要对应修改
+      - FLOWISE_BASE_URL=http://docker-flowise-1:8888
+      - FLOWISE_CHATFLOW_ID=acf73857-57bc-4980-b82c-c6f5657fb8b5
+      - FLOWISE_API_KEY=RmiRXq1iKhakxxfEnEMjvwjy5ifwfWH3oxcb_4S3CIg
+      # GStore相关配置（保留原逻辑）
+      - GSTORE_BASE_URL=http://gf-gstore:9000
+      - GSTORE_USERNAME=root
+      - GSTORE_PASSWORD=123456
+      - GSTORE_DB_NAME=celebrity_db
+      # 数据库核心配置（关键：与mysqlpx容器完全匹配）
+      - DB_HOST=mysqlpx                # 指向现有mysqlpx容器名称（同一网络可解析）
+      - DB_PORT=3306       # MySQL内部端口（固定3306，无需修改）
+      - DB_USER=${DB_USER:-root}       # mysqlpx的root用户（唯一可用管理员用户）
+      - DB_PASSWORD=${DB_PASSWORD:-123456}  # 与mysqlpx的MYSQL_ROOT_PASSWORD一致
+      - DB_NAME=${DB_NAME:-modeldev}   # 与mysqlpx初始化的数据库名一致
+      # 新加的配置 包括图片生成 以及意图识别的工作流
+      - MERMAID_URL=http://rov-demo:8085/api/mermaid/replace-with-images #图片识别替换url 是spring项目的ip和端口
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate  #基座模型url  http://host.docker.internal:11434
+      - OLLAMA_MODEL=qwen:7b-chat  #基座模型名字
+      - FLOWISE_CHATFLOW_ID_1=8be406de-5a11-448b-ab1e-7ac46a8d16c5 #装备流id
+      - FLOWISE_CHATFLOW_ID_2=4df6e2a5-ec3b-4ede-86fa-ce835bc43455 #后装流id
+      - FLOWISE_CHATFLOW_ID_3=8e4f5013-b020-49f8-b91e-221cc8e00d6e #实时战况流id
+      - FLOWISE_CHATFLOW_ID_4=acf73857-57bc-4980-b82c-c6f5657fb8b5 #基础流id
+      # 应用端口配置
+      - APP_PORT=${APP_PORT:-8088}
+    # 重启策略：除非手动停止，否则容器退出后自动重启（与原配置一致）
+    restart: unless-stopped
+    # 加入目标网络：使用已存在的gf-network（与mysqlpx同网络）
+    networks:
+      - gf-network
+
+# 声明外部网络：指定使用已存在的gf-network，不重新创建
+networks:
+  gf-network:
+    external: true  # 核心标记：告诉Compose该网络已存在，直接使用
