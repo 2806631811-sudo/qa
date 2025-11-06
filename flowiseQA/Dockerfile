@@ -1,5 +1,5 @@
-# 使用Python 3.10官方镜像作为基础镜像
-FROM python:3.10-slim
+# 使用 arm64 架构的 Python 3.10 官方镜像
+FROM --platform=linux/arm64 python:3.10-slim
 
 # 设置工作目录
 WORKDIR /app
@@ -38,4 +38,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8088/health || exit 1
 
 # 启动命令
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8088"]
